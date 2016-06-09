@@ -415,11 +415,13 @@ CLEANFILES += zmq/*.gcda zmq/*.gcno
 
 DISTCLEANFILES = obj/build.h
 
+EXTRA_DIST =
+
 clean-local:
 	-$(MAKE) -C secp256k1 clean
-	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
+	-rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
-	-rm -rf test/__pycache__
+  -rm -rf test/__pycache__
 
 .rc.o:
 	@test -f $(WINDRES)
