@@ -60,7 +60,7 @@ script:
     - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
     - mkdir build && cd build
     - ../configure --cache-file=config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG || ( cat config.log && false)
-    - make --disable-shared --with-pic --with-bignum=no --enable-module-recovery VERSION=$HOST
+    - make distdir VERSION=$HOST
     - cd crown-$HOST
     - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
