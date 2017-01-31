@@ -1156,7 +1156,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     nTotalCache -= nBlockTreeDBCache;
     size_t nCoinDBCache = nTotalCache / 2; // use half of the remaining cache for coindb cache
     nTotalCache -= nCoinDBCache;
-    nCoinCacheUsage = nTotalCache;
+    nCoinCacheSize = nTotalCache / 300; // coins in memory require around 300 bytes
 
     bool fLoaded = false;
     while (!fLoaded) {
