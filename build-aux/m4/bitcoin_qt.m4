@@ -332,7 +332,6 @@ AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
         fi
       fi
      if test x$use_pkgconfig = xyes; then
-     : dnl
      m4_ifdef([PKG_CHECK_MODULES],[
        PKG_CHECK_MODULES([QTPLATFORM], [Qt5PlatformSupport], [QT_LIBS="$QTPLATFORM_LIBS $QT_LIBS"])
        if test x$TARGET_OS = xlinux; then
