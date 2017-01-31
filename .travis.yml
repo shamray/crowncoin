@@ -72,3 +72,4 @@ deploy:
     - ${OUTDIR}/..//crowncoin-$HOST.tar.gz
   on:
     repo: Crowndev/crowncoin
+    all_branches: true
