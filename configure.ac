@@ -49,8 +49,6 @@ case $host in
 esac
 dnl Require C++11 compiler (no GNU extensions)
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
-dnl Libtool init checks.
-LT_INIT([pic-only])
 dnl Check if -latomic is required for <std::atomic>
 CHECK_ATOMIC
 
@@ -62,6 +60,9 @@ if test "x${OBJCXX+set}" = "x"; then
 fi
 AC_PROG_OBJCXX
 ])
+
+dnl Libtool init checks.
+LT_INIT([pic-only])
 
 dnl Check/return PATH for base programs.
 AC_PATH_TOOL(AR, ar)
@@ -167,6 +168,8 @@ AC_ARG_ENABLE([debug],
 
 AC_LANG_PUSH([C++])
 AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
+
+CFLAGS="$CFLAGS -fPIC"
 
 if test "x$enable_debug" = xyes; then
     CPPFLAGS="$CPPFLAGS -DDEBUG -DDEBUG_LOCKORDER"
@@ -426,6 +429,10 @@ AX_GCC_FUNC_ATTRIBUTE([dllimport])
 
 if test x$use_glibc_compat != xno; then
 
+  #glibc absorbed clock_gettime in 2.17. librt (its previous location) is safe to link
+  #in anyway for back-compat.
+  AC_CHECK_LIB([rt],[clock_gettime],, AC_MSG_ERROR(lib missing))
+
   #__fdelt_chk's params and return type have changed from long unsigned int to long int.
   # See which one is present here.
   AC_MSG_CHECKING(__fdelt_chk type)
@@ -439,7 +446,13 @@ if test x$use_glibc_compat != xno; then
     [ fdelt_type="long int"])
   AC_MSG_RESULT($fdelt_type)
   AC_DEFINE_UNQUOTED(FDELT_TYPE, $fdelt_type,[parameter and return value type for __fdelt_chk])
+else
+  AC_SEARCH_LIBS([clock_gettime],[rt])
+fi
 
+if test x$TARGET_OS != xwindows; then
+  # All windows code is PIC, forcing it on just adds useless compile warnings
+  AX_CHECK_COMPILE_FLAG([-fPIC],[PIC_FLAGS="-fPIC"])
 fi
 
 if test x$use_hardening != xno; then
@@ -455,13 +468,14 @@ if test x$use_hardening != xno; then
 
   AX_CHECK_LINK_FLAG([[-Wl,--dynamicbase]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--dynamicbase"])
   AX_CHECK_LINK_FLAG([[-Wl,--nxcompat]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--nxcompat"])
+  AX_CHECK_LINK_FLAG([[-Wl,--high-entropy-va]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,--high-entropy-va"])
   AX_CHECK_LINK_FLAG([[-Wl,-z,relro]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,relro"])
   AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"])
 
   if test x$TARGET_OS != xwindows; then
     # All windows code is PIC, forcing it on just adds useless compile warnings
-    AX_CHECK_COMPILE_FLAG([-fPIC],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fPIC"])
-    AX_CHECK_LINK_FLAG([[-pic]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pic"])
+    AX_CHECK_COMPILE_FLAG([-fPIE],[PIE_FLAGS="-fPIE"])
+    AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
 
   case $host in
@@ -470,10 +484,6 @@ if test x$use_hardening != xno; then
     ;;
   esac
 
-  CXXFLAGS="$CXXFLAGS $HARDENED_CXXFLAGS"
-  CPPFLAGS="$CPPFLAGS $HARDENED_CPPFLAGS"
-  LDFLAGS="$LDFLAGS $HARDENED_LDFLAGS"
-  OBJCXXFLAGS="$CXXFLAGS"
 fi
 
 dnl this flag screws up non-darwin gcc even when the check fails. special-case it.
@@ -495,7 +505,7 @@ AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, b
                  #endif])
 
 AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
-    [#if HAVE_BYTESWAP_H
+		[#if HAVE_BYTESWAP_H
                  #include <byteswap.h>
                  #endif])
 
@@ -506,8 +516,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
  [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MSG_NOSIGNAL, 1,[Define this symbol if you have MSG_NOSIGNAL]) ],
  [ AC_MSG_RESULT(no)]
 )
-
-AC_SEARCH_LIBS([clock_gettime],[rt])
 
 AC_MSG_CHECKING([for visibility attribute])
 AC_LINK_IFELSE([AC_LANG_SOURCE([
@@ -528,15 +536,9 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   ]
 )
 
-if test x$use_reduce_exports != xno; then
+if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[RE_CXXFLAGS="-fvisibility=hidden"],
-  [
-    if test x$use_reduce_exports = xyes; then
-      AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduced-exports.])
-    fi
-    AC_MSG_WARN([Cannot set default symbol visibility. Disabling reduced exports.])
-    use_reduce_exports=no
-  ])
+  [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
 LEVELDB_CPPFLAGS=
@@ -564,7 +566,7 @@ fi
 BITCOIN_QT_INIT
 
 dnl sets $bitcoin_enable_qt, $bitcoin_enable_qt_test, $bitcoin_enable_qt_dbus
-BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt4])
+BITCOIN_QT_CONFIGURE([$use_pkgconfig], [qt5])
 
 if test x$build_bitcoin_utils$build_bitcoind$bitcoin_enable_qt$use_tests = xnononono; then
     use_boost=no
@@ -574,8 +576,11 @@ fi
 
 if test x$use_boost = xyes; then
 
+dnl Minimum required Boost version
+define(MINIMUM_REQUIRED_BOOST, 1.47.0)
+
 dnl Check for boost libs
-AX_BOOST_BASE
+AX_BOOST_BASE([MINIMUM_REQUIRED_BOOST])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_PROGRAM_OPTIONS
@@ -583,7 +588,7 @@ AX_BOOST_THREAD
 AX_BOOST_CHRONO
 
 
-if test x$use_reduce_exports != xno; then
+if test x$use_reduce_exports = xyes; then
   AC_MSG_CHECKING([for working boost reduced exports])
   TEMP_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$BOOST_CPPFLAGS $CPPFLAGS"
@@ -597,25 +602,15 @@ if test x$use_reduce_exports != xno; then
       #endif
     ]])],[
       AC_MSG_RESULT(yes)
-    ],[:
-    if test x$use_reduce_exports = xauto; then
-      use_reduce_exports=no
-    else
-      if test x$use_reduce_exports = xyes; then
-        AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduced-exports.])
-      fi
-    fi
-    AC_MSG_RESULT(no)
-    AC_MSG_WARN([boost versions < 1.49 are known to have symbol visibility issues. Disabling reduced exports.])
+    ],[
+    AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduce-exports.])
   ])
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
-elif test x$use_reduce_exports = xauto; then
-    use_reduce_exports=yes
 fi
 
-if test x$use_reduce_exports != xno; then
+if test x$use_reduce_exports = xyes; then
     CXXFLAGS="$CXXFLAGS $RE_CXXFLAGS"
     AX_CHECK_LINK_FLAG([[-Wl,--exclude-libs,ALL]], [RELDFLAGS="-Wl,--exclude-libs,ALL"])
 fi
@@ -654,17 +649,50 @@ fi
 
 if test x$use_boost = xyes; then
 
-BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB"
+BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB $BOOST_CHRONO_LIB"
+
+dnl If boost (prior to 1.57) was built without c++11, it emulated scoped enums
+dnl using c++98 constructs. Unfortunately, this implementation detail leaked into
+dnl the abi. This was fixed in 1.57.
+
+dnl When building against that installed version using c++11, the headers pick up
+dnl on the native c++11 scoped enum support and enable it, however it will fail to
+dnl link. This can be worked around by disabling c++11 scoped enums if linking will
+dnl fail.
+dnl BOOST_NO_SCOPED_ENUMS was changed to BOOST_NO_CXX11_SCOPED_ENUMS in 1.51.
+
+TEMP_LIBS="$LIBS"
+LIBS="$BOOST_LIBS $LIBS"
+TEMP_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+AC_MSG_CHECKING([for mismatched boost c++11 scoped enums])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+  #include "boost/config.hpp"
+  #include "boost/version.hpp"
+  #if !defined(BOOST_NO_SCOPED_ENUMS) && !defined(BOOST_NO_CXX11_SCOPED_ENUMS) && BOOST_VERSION < 105700
+  #define BOOST_NO_SCOPED_ENUMS
+  #define BOOST_NO_CXX11_SCOPED_ENUMS
+  #define CHECK
+  #endif
+  #include "boost/filesystem.hpp"
+  ]],[[
+  #if defined(CHECK)
+    boost::filesystem::copy_file("foo", "bar");
+  #else
+    choke;
+  #endif
+  ]])],
+  [AC_MSG_RESULT(mismatched); BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_SCOPED_ENUMS -DBOOST_NO_CXX11_SCOPED_ENUMS"], [AC_MSG_RESULT(ok)])
+LIBS="$TEMP_LIBS"
+CPPFLAGS="$TEMP_CPPFLAGS"
 
 dnl Boost >= 1.50 uses sleep_for rather than the now-deprecated sleep, however
 dnl it was broken from 1.50 to 1.52 when backed by nanosleep. Use sleep_for if
 dnl a working version is available, else fall back to sleep. sleep was removed
 dnl after 1.56.
 dnl If neither is available, abort.
-dnl If sleep_for is used, boost_chrono becomes a requirement.
-if test x$ax_cv_boost_chrono = xyes; then
 TEMP_LIBS="$LIBS"
-LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB $LIBS"
+LIBS="$BOOST_LIBS $LIBS"
 TEMP_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
@@ -677,12 +705,11 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
    choke me
   #endif
   ]])],
-  [boost_sleep=yes; BOOST_LIBS="$BOOST_LIBS $BOOST_CHRONO_LIB";
+  [boost_sleep=yes;
      AC_DEFINE(HAVE_WORKING_BOOST_SLEEP_FOR, 1, [Define this symbol if boost sleep_for works])],
   [boost_sleep=no])
 LIBS="$TEMP_LIBS"
 CPPFLAGS="$TEMP_CPPFLAGS"
-fi
 
 if test x$boost_sleep != xyes; then
 TEMP_LIBS="$LIBS"
