@@ -12,6 +12,11 @@ AC_CONFIG_HEADERS([src/config/crown-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
+CROWN_DAEMON_NAME=crownd
+CROWN_GUI_NAME=crown-qt
+CROWN_CLI_NAME=crown-cli
+CROWN_TX_NAME=crown-tx
+
 AC_CANONICAL_HOST
 
 AH_TOP([#ifndef CRW_CONFIG_H])
@@ -473,7 +478,6 @@ if test x$use_hardening != xno; then
   AX_CHECK_LINK_FLAG([[-Wl,-z,now]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -Wl,-z,now"])
 
   if test x$TARGET_OS != xwindows; then
-    # All windows code is PIC, forcing it on just adds useless compile warnings
     AX_CHECK_COMPILE_FLAG([-fPIE],[PIE_FLAGS="-fPIE"])
     AX_CHECK_LINK_FLAG([[-pie]], [HARDENED_LDFLAGS="$HARDENED_LDFLAGS -pie"])
   fi
@@ -538,7 +542,7 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
 
 if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[RE_CXXFLAGS="-fvisibility=hidden"],
-  [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
+  [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduced-exports.])])
 fi
 
 LEVELDB_CPPFLAGS=
@@ -911,7 +915,7 @@ else
 fi
 
 AC_MSG_CHECKING([whether to reduce exports])
-if test x$use_reduce_exports != xno; then
+if test x$use_reduce_exports = xyes; then
   AC_MSG_RESULT([yes])
 else
   AC_MSG_RESULT([no])
@@ -930,9 +934,8 @@ AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$use_tests$bitcoin_enable_qt_test = xyesyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
-AM_CONDITIONAL([USE_COMPARISON_TOOL],[test x$use_comparison_tool != xno])
-AM_CONDITIONAL([USE_COMPARISON_TOOL_REORG_TESTS],[test x$use_comparison_tool_reorg_test != xno])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
+AM_CONDITIONAL([HARDEN],[test x$use_hardening = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
@@ -947,7 +950,16 @@ AC_SUBST(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD)
 AC_SUBST(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE)
 AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
 
+AC_SUBST(CROWN_DAEMON_NAME)
+AC_SUBST(CROWN_GUI_NAME)
+AC_SUBST(CROWN_CLI_NAME)
+AC_SUBST(CROWN_TX_NAME)
 AC_SUBST(RELDFLAGS)
+AC_SUBST(HARDENED_CXXFLAGS)
+AC_SUBST(HARDENED_CPPFLAGS)
+AC_SUBST(HARDENED_LDFLAGS)
+AC_SUBST(PIC_FLAGS)
+AC_SUBST(PIE_FLAGS)
 AC_SUBST(LIBTOOL_APP_LDFLAGS)
 AC_SUBST(USE_UPNP)
 AC_SUBST(USE_QRCODE)
