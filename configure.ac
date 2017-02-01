@@ -19,9 +19,9 @@ CROWN_TX_NAME=crown-tx
 
 AC_CANONICAL_HOST
 
-AH_TOP([#ifndef CRW_CONFIG_H])
-AH_TOP([#define CRW_CONFIG_H])
-AH_BOTTOM([#endif //CRW_CONFIG_H])
+AH_TOP([#ifndef CROWN_CONFIG_H])
+AH_TOP([#define CROWN_CONFIG_H])
+AH_BOTTOM([#endif //CROWN_CONFIG_H])
 
 dnl faketime breaks configure and is only needed for make. Disable it here.
 unset FAKETIME
@@ -136,9 +136,9 @@ AC_ARG_ENABLE([hardening],
 
 AC_ARG_ENABLE([reduce-exports],
   [AS_HELP_STRING([--enable-reduce-exports],
-  [attempt to reduce exported symbols in the resulting executables (default is yes)])],
+  [attempt to reduce exported symbols in the resulting executables (default is no)])],
   [use_reduce_exports=$enableval],
-  [use_reduce_exports=auto])
+  [use_reduce_exports=no])
 
 AC_ARG_ENABLE([ccache],
   [AS_HELP_STRING([--disable-ccache],
@@ -492,6 +492,9 @@ AC_SEARCH_LIBS([inet_pton], [nsl resolv], [AC_DEFINE(HAVE_INET_PTON, 1, [Define 
 
 AC_CHECK_DECLS([strnlen])
 
+# Check for daemon(3), unrelated to --with-daemon (although used by it)
+AC_CHECK_DECLS([daemon])
+
 AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
 		[#if HAVE_ENDIAN_H
                  #include <endian.h>
@@ -524,14 +527,14 @@ AC_LINK_IFELSE([AC_LANG_SOURCE([
   [
     AC_MSG_RESULT(no)
     if test x$use_reduce_exports = xyes; then
-      AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduced-exports.])
+      AC_MSG_ERROR([Cannot find a working visibility attribute. Use --disable-reduce-exports.])
     fi
   ]
 )
 
 if test x$use_reduce_exports = xyes; then
   AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[RE_CXXFLAGS="-fvisibility=hidden"],
-  [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduced-exports.])])
+  [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
 LEVELDB_CPPFLAGS=
@@ -596,7 +599,7 @@ if test x$use_reduce_exports = xyes; then
     ]])],[
       AC_MSG_RESULT(yes)
     ],[
-    AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduced-exports.])
+    AC_MSG_ERROR([boost versions < 1.49 are known to be broken with reduced exports. Use --disable-reduce-exports.])
   ])
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
@@ -733,7 +736,6 @@ fi
 fi
 
 if test x$use_pkgconfig = xyes; then
-
   : dnl
   m4_ifdef(
     [PKG_CHECK_MODULES],
@@ -850,8 +852,8 @@ else
 fi
 
 dnl these are only used when qt is enabled
+BUILD_TEST_QT=""
 if test x$bitcoin_enable_qt != xno; then
-  BUILD_TEST_QT=""
   dnl enable dbus support
   AC_MSG_CHECKING([whether to build GUI with support for D-Bus])
   if test x$bitcoin_enable_qt_dbus != xno; then
@@ -886,16 +888,16 @@ if test x$bitcoin_enable_qt != xno; then
     BUILD_TEST_QT="yes"
   else
     AC_MSG_RESULT([no])
-    BUILD_TEST=""
   fi
 fi
 
 AC_MSG_CHECKING([whether to build test_crown])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])
-  BUILD_TEST="test"
+  BUILD_TEST="yes"
 else
   AC_MSG_RESULT([no])
+  BUILD_TEST=""
 fi
 
 AC_MSG_CHECKING([whether to reduce exports])
@@ -916,7 +918,6 @@ AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$BUILD_TEST_QT = xyes])
-AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$use_tests$bitcoin_enable_qt_test = xyesyes])
 AM_CONDITIONAL([USE_QRCODE], [test x$use_qr = xyes])
 AM_CONDITIONAL([USE_LCOV],[test x$use_lcov = xyes])
 AM_CONDITIONAL([GLIBC_BACK_COMPAT],[test x$use_glibc_compat = xyes])
