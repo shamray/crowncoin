@@ -10,8 +10,7 @@ $(package)_config_opts=--disable-shared --enable-cxx --disable-replication
 $(package)_config_opts_mingw32=--enable-mingw
 $(package)_config_opts_linux=--with-pic
 $(package)_cxxflags_darwin=
-$(package)_cxxflags_mingw32=-std=c++11
-$(package)_cxxflags_linux=-std=c++11
+$(package)_cxxflags=-std=c++11
 endef
 
 define $(package)_preprocess_cmds
