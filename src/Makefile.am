@@ -317,7 +317,7 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 # bitcoind binary #
 crownd_SOURCES = crownd.cpp
 crownd_CPPFLAGS = $(AM_CXXFLAGS) $(BITCOIN_INCLUDES)
-vertcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crownd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crownd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
@@ -364,7 +364,7 @@ crown_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crown_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-vertcoin_tx_SOURCES += bitcoin-tx-res.rc
+crown_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
 crown_tx_LDADD = \
@@ -376,7 +376,7 @@ crown_tx_LDADD = \
   $(BOOST_LIBS) \
   $(CRYPTO_LIBS)
 
-vertcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+crown_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 if BUILD_BITCOIN_LIBS
