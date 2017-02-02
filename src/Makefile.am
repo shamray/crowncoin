@@ -253,6 +253,8 @@ libbitcoin_consensus_a_SOURCES = \
   arith_uint256.cpp \
   arith_uint256.h \
   hash.cpp \
+  primitives/block.cpp \
+  primitives/pureheader.cpp \
   primitives/transaction.cpp \
   pubkey.cpp \
   script/bitcoinconsensus.cpp \
@@ -272,9 +274,6 @@ libbitcoin_common_a_SOURCES = \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
-  primitives/block.cpp \
-  primitives/pureheader.cpp \
-  primitives/transaction.cpp \
   core_read.cpp \
   core_write.cpp \
   key.cpp \
