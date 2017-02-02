@@ -19,6 +19,13 @@ LIBBITCOIN_UNIVALUE=univalue/libbitcoin_univalue.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
+if BUILD_BITCOIN_LIBS
+lib_LTLIBRARIES = libbitcoinconsensus.la
+LIBBITCOIN_CONSENSUS=libbitcoinconsensus.la
+else
+LIBBITCOIN_CONSENSUS=
+endif
+
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
@@ -36,14 +43,8 @@ BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
 EXTRA_LIBRARIES += libbitcoin_wallet.a
 endif
 
-if BUILD_BITCOIN_LIBS
-lib_LTLIBRARIES = libbitcoinconsensus.la
-LIBBITCOIN_CONSENSUS=libbitcoinconsensus.la
-else
-LIBBITCOIN_CONSENSUS=
-endif
-
 bin_PROGRAMS =
+noinst_PROGRAMS =
 TESTS =
 
 if BUILD_BITCOIND
@@ -164,7 +165,7 @@ obj/build.h: FORCE
 libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between crownd and crown-qt
-libbitcoin_server_a_CPPFLAGS =  $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_server_a_SOURCES = \
   addrman.cpp \
@@ -314,6 +315,15 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
+crownd_SOURCES = crownd.cpp
+crownd_CPPFLAGS = $(AM_CXXFLAGS) $(BITCOIN_INCLUDES)
+vertcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crownd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+if TARGET_WINDOWS
+crownd_SOURCES += crownd-res.rc
+endif
+
 crownd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
@@ -324,21 +334,19 @@ crownd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-if ENABLE_WALLET
-crownd_LDADD += libbitcoin_wallet.a
-endif
-crownd_SOURCES = crownd.cpp
+crownd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 #
 
+# crown-cli binary #
+crown_cli_SOURCES = crown-cli.cpp
+crown_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+crown_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crown_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
 if TARGET_WINDOWS
-crownd_SOURCES += crownd-res.rc
+crown_cli_SOURCES += crown-cli-res.rc
 endif
 
-crownd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
-crownd_CPPFLAGS = $(BITCOIN_INCLUDES)
-crownd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-
-# crown-cli binary #
 crown_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_UTIL) \
@@ -346,13 +354,19 @@ crown_cli_LDADD = \
   $(SSL_LIBS) \
   $(CRYPTO_LIBS)
 
-crown_cli_SOURCES = \
-  crown-cli.cpp
-
-crown_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
+crown_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # crown-tx binary #
+crown_tx_SOURCES = crown-tx.cpp
+crown_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+crown_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+crown_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+if TARGET_WINDOWS
+vertcoin_tx_SOURCES += bitcoin-tx-res.rc
+endif
+
 crown_tx_LDADD = \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_COMMON) \
@@ -362,15 +376,8 @@ crown_tx_LDADD = \
   $(BOOST_LIBS) \
   $(CRYPTO_LIBS)
 
-crown_tx_SOURCES = crown-tx.cpp
-crown_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
+vertcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
-crown_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-
-if TARGET_WINDOWS
-crown_cli_SOURCES += crown-cli-res.rc
-endif
-crown_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
@@ -422,7 +429,8 @@ EXTRA_DIST =
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean
-	-rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
+	-$(MAKE) -C univalue clean
+	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
 
@@ -433,7 +441,7 @@ clean-local:
 
 .mm.o:
 	$(AM_V_CXX) $(OBJCXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS)  -c -o $@ $<
+	  $(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS)  -c -o $@ $<
 
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
