@@ -372,7 +372,7 @@ crown_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crown_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-crown_tx_SOURCES += bitcoin-tx-res.rc
+crown_tx_SOURCES += crown-tx-res.rc
 endif
 
 crown_tx_LDADD = \
