@@ -316,7 +316,7 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 
 # bitcoind binary #
 crownd_SOURCES = crownd.cpp
-crownd_CPPFLAGS = $(AM_CXXFLAGS) $(BITCOIN_INCLUDES)
+crownd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 crownd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crownd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -349,10 +349,7 @@ endif
 
 crown_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
-  $(LIBBITCOIN_UTIL) \
-  $(BOOST_LIBS) \
-  $(SSL_LIBS) \
-  $(CRYPTO_LIBS)
+  $(LIBBITCOIN_UTIL) 
 
 crown_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
@@ -372,9 +369,7 @@ crown_tx_LDADD = \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
-  $(LIBSECP256K1) \
-  $(BOOST_LIBS) \
-  $(CRYPTO_LIBS)
+  $(LIBSECP256K1) 
 
 crown_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
