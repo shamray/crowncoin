@@ -252,17 +252,13 @@ libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
   arith_uint256.cpp \
   arith_uint256.h \
-  crypto/hmac_sha512.cpp \
-  crypto/ripemd160.cpp \
-  crypto/sha1.cpp \
-  crypto/sha256.cpp \
-  crypto/sha512.cpp \
   hash.cpp \
   primitives/transaction.cpp \
   pubkey.cpp \
   script/bitcoinconsensus.cpp \
   script/interpreter.cpp \
   script/script.cpp \
+  script/script_error.cpp \
   uint256.cpp \
   utilstrencodings.cpp
 
@@ -281,17 +277,12 @@ libbitcoin_common_a_SOURCES = \
   primitives/transaction.cpp \
   core_read.cpp \
   core_write.cpp \
-  hash.cpp \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
   protocol.cpp \
-  pubkey.cpp \
-  script/interpreter.cpp \
-  script/script.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  script/script_error.cpp \
   spork.cpp \
   $(BITCOIN_CORE_H)
 
@@ -311,7 +302,6 @@ libbitcoin_util_a_SOURCES = \
   rpcprotocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
-  uint256.cpp \
   util.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
@@ -400,7 +390,7 @@ crown_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(libbitcoin_consensus_a_SOURCES)
+libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
