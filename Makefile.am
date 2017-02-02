@@ -4,13 +4,17 @@ SUBDIRS = src
 
 GZIP_ENV="-9n"
 
-CROWND_BIN=$(top_builddir)/src/crownd$(EXEEXT)
-CROWN_QT_BIN=$(top_builddir)/src/qt/crown-qt$(EXEEXT)
-CROWN_CLI_BIN=$(top_builddir)/src/crown-cli$(EXEEXT)
-CROWN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
+BITCOIND_BIN=$(top_builddir)/src/crownd$(EXEEXT)
+BITCOIN_QT_BIN=$(top_builddir)/src/qt/crown-qt$(EXEEXT)
+BITCOIN_CLI_BIN=$(top_builddir)/src/crown-cli$(EXEEXT)
+BITCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
+
+empty :=
+space := $(empty) $(empty)
 
 OSX_APP=Crown-Qt.app
-OSX_DMG=Crown-Qt.dmg
+OSX_VOLNAME = $(subst $(space),-,$(PACKAGE_NAME))
+OSX_DMG = $(OSX_VOLNAME).dmg
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST=$(top_srcdir)/contrib/macdeploy/fancy.plist
 OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
@@ -38,11 +42,11 @@ COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
 dist-hook:
 	-$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
 
-$(CROWN_WIN_INSTALLER): all-recursive
+$(BITCOIN_WIN_INSTALLER): all-recursive
 	$(MKDIR_P) $(top_builddir)/release
-	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(CROWND_BIN) $(top_builddir)/release
-	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(CROWN_QT_BIN) $(top_builddir)/release
-	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(CROWN_CLI_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIND_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_QT_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIN_CLI_BIN) $(top_builddir)/release
 	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 	@echo built $@
@@ -66,7 +70,7 @@ $(OSX_APP)/Contents/Resources/bitcoin.icns: $(OSX_INSTALLER_ICONS)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/MacOS/Crown-Qt: $(CROWN_QT_BIN)
+$(OSX_APP)/Contents/MacOS/Crown-Qt: $(BITCOIN_QT_BIN)
 	$(MKDIR_P) $(@D)
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $< $@
 
@@ -78,9 +82,12 @@ OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lp
   $(OSX_APP)/Contents/Resources/bitcoin.icns $(OSX_APP)/Contents/Info.plist \
   $(OSX_APP)/Contents/MacOS/Crown-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
 
+osx_volname:
+	echo $(OSX_VOLNAME) >$@
+
 if BUILD_DARWIN
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	$(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2
+	$(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2 -volname $(OSX_VOLNAME)
 
 deploydir: $(OSX_DMG)
 else
@@ -94,7 +101,7 @@ $(APP_DIST_DIR)/Applications:
 $(APP_DIST_EXTRAS): $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Crown-Qt
 
 $(OSX_DMG): $(APP_DIST_EXTRAS)
-	$(GENISOIMAGE) -no-cache-inodes -D -l -probe -V "Crown-Qt" -no-pad -r -apple -o $@ dist
+	$(GENISOIMAGE) -no-cache-inodes -D -l -probe -V "$(OSX_VOLNAME)" -no-pad -r -dir-mode 0755 -apple -o $@ dist
 
 $(APP_DIST_DIR)/.background/background.png:
 	$(MKDIR_P) $(@D)
@@ -113,16 +120,16 @@ appbundle: $(OSX_APP_BUILT)
 deploy: $(OSX_DMG)
 endif
 if TARGET_WINDOWS
-deploy: $(CROWN_WIN_INSTALLER)
+deploy: $(BITCOIN_WIN_INSTALLER)
 endif
 
-$(CROWN_QT_BIN): FORCE
+$(BITCOIN_QT_BIN): FORCE
 	$(MAKE) -C src qt/$(@F)
 
-$(CROWND_BIN): FORCE
+$(BITCOIND_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
-$(CROWN_CLI_BIN): FORCE
+$(BITCOIN_CLI_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 if USE_LCOV
@@ -180,7 +187,7 @@ endif
 
 EXTRA_DIST = $(top_srcdir)/share/genbuild.sh qa/pull-tester/rpc-tests.sh qa/pull-tester/run-bitcoin-cli qa/rpc-tests $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING)
 
-CLEANFILES = $(OSX_DMG) $(CROWN_WIN_INSTALLER)
+CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 
 .INTERMEDIATE: $(COVERAGE_INFO)
 
