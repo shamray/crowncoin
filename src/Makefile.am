@@ -21,6 +21,7 @@ BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
+LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
@@ -28,7 +29,7 @@ LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if BUILD_BITCOIN_LIBS
-LIBBITCOIN_CONSENSUS=libbitcoinconsensus.la
+LIBBITCOINCONSENSUS=libbitcoinconsensus.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -49,11 +50,6 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_WALLET)
 
 lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
-
-if ENABLE_WALLET
-BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
-EXTRA_LIBRARIES += libbitcoin_wallet.a
-endif
 
 bin_PROGRAMS =
 noinst_PROGRAMS =
@@ -237,24 +233,24 @@ libbitcoin_wallet_a_SOURCES = \
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_a_SOURCES = \
-  crypto/sha1.cpp \
-  crypto/sha256.cpp \
-  crypto/sha512.cpp \
-  crypto/hmac_sha256.cpp \
-  crypto/hmac_sha512.cpp \
-  crypto/ripemd160.cpp \
   crypto/common.h \
-  crypto/sha256.h \
-  crypto/sha512.h \
+  crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
+  crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
+  crypto/ripemd160.cpp \
+  crypto/ripemd160.h \
+  crypto/sha1.cpp \
   crypto/sha1.h \
-  crypto/ripemd160.h
+  crypto/sha256.cpp \
+  crypto/sha256.h \
+  crypto/sha512.cpp \
+  crypto/sha512.h
 
 # consensus: shared between all executables that validate any consensus rules.
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbitcoinconsensus_a_SOURCES = \
+libbitcoin_consensus_a_SOURCES = \
   arith_uint256.cpp \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
@@ -402,9 +398,10 @@ crown_tx_LDADD = \
 crown_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
+# bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libbitcoinconsensus_la_SOURCES = $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
