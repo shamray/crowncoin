@@ -69,7 +69,6 @@ BITCOIN_CORE_H = \
   activethrone.h \
   addrman.h \
   alert.h \
-  amount.h \
   auxpow.h \
   base58.h \
   bloom.h \
@@ -83,13 +82,15 @@ BITCOIN_CORE_H = \
   coincontrol.h \
   coins.h \
   compat.h \
+  compat/byteswap.h \
+  compat/endian.h \
+  compat/sanity.h \
   compressor.h \
   core_io.h \
   crypter.h \
   darksend.h \
   darksend-relay.h \
   db.h \
-  hash.h \
   init.h \
   instantx.h \
   key.h \
@@ -97,36 +98,26 @@ BITCOIN_CORE_H = \
   leveldbwrapper.h \
   limitedmap.h \
   main.h \
-  memusage.h \
-  merkleblock.h \
   miner.h \
   mruset.h \
   netbase.h \
   net.h \
   noui.h \
   pow.h \
-  primitives/block.h \
-  primitives/pureheader.h \
-  primitives/transaction.h \
   protocol.h \
-  pubkey.h \
   random.h \
   rpcclient.h \
   rpcprotocol.h \
   rpcserver.h \
-  script/interpreter.h \
-  script/script_error.h \
-  script/script.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
-  serialize.h \
   spork.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
-  support/pagelocker.h \
   support/cleanse.h \
+  support/pagelocker.h \
   sync.h \
   throne.h \
   throne-payments.h \
@@ -136,23 +127,16 @@ BITCOIN_CORE_H = \
   throneconfig.h \
   threadsafety.h \
   timedata.h \
-  tinyformat.h \
   txdb.h \
   txmempool.h \
   ui_interface.h \
-  uint256.h \
   undo.h \
   util.h \
   utilmoneystr.h \
-  utilstrencodings.h \
   utiltime.h \
-  version.h \
   walletdb.h \
   wallet.h \
-  wallet_ismine.h \
-  compat/byteswap.h \
-  compat/endian.h \
-  compat/sanity.h
+  wallet_ismine.h
 
 JSON_H = \
   json/json_spirit.h \
@@ -250,19 +234,33 @@ crypto_libbitcoin_crypto_a_SOURCES = \
 libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
+  amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
   hash.cpp \
+  hash.h \
   primitives/block.cpp \
+  primitives/block.h \
   primitives/pureheader.cpp \
+  primitives/pureheader.h \
   primitives/transaction.cpp \
+  primitives/transaction.h \
   pubkey.cpp \
+  pubkey.h \
   script/bitcoinconsensus.cpp \
   script/interpreter.cpp \
+  script/interpreter.h \
   script/script.cpp \
+  script/script.h \
   script/script_error.cpp \
+  script/script_error.h \
+  serialize.h \
+  tinyformat.h \
   uint256.cpp \
-  utilstrencodings.cpp
+  uint256.h \
+  utilstrencodings.cpp \
+  utilstrencodings.h \
+  version.h
 
 # common: shared between crownd, and crown-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
