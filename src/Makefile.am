@@ -71,7 +71,6 @@ BITCOIN_CORE_H = \
   alert.h \
   amount.h \
   auxpow.h \
-  arith_uint256.h \
   base58.h \
   bloom.h \
   chain.h \
@@ -252,6 +251,7 @@ libbitcoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_consensus_a_SOURCES = \
   arith_uint256.cpp \
+  arith_uint256.h \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
   crypto/sha1.cpp \
@@ -270,7 +270,6 @@ libbitcoin_consensus_a_SOURCES = \
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
-  arith_uint256.cpp \
   amount.cpp \
   auxpow.cpp \
   base58.cpp \
