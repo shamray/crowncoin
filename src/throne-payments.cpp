@@ -6,7 +6,7 @@
 #include "throne-budget.h"
 #include "throne-sync.h"
 #include "throneman.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "util.h"
 #include "sync.h"
 #include "spork.h"
@@ -351,11 +351,11 @@ void CThronePayments::ProcessMessageThronePayments(CNode* pfrom, std::string& st
 {
     if(!throneSync.IsBlockchainSynced()) return;
 
-    if(fLiteMode) return; //disable all Darksend/Throne related functionality
+    if(fLiteMode) return; //disable all Throne related functionality
 
 
     if (strCommand == "mnget") { //Throne Payments Request Sync
-        if(fLiteMode) return; //disable all Darksend/Throne related functionality
+        if(fLiteMode) return; //disable all Throne related functionality
 
         int nCountNeeded;
         vRecv >> nCountNeeded;
@@ -439,12 +439,12 @@ bool CThronePaymentWinner::Sign(CKey& keyThrone, CPubKey& pubKeyThrone)
                 boost::lexical_cast<std::string>(nBlockHeight) +
                 payee.ToString();
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchSig, keyThrone)) {
         LogPrintf("CThronePing::Sign() - Error: %s\n", errorMessage.c_str());
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubKeyThrone, vchSig, strMessage, errorMessage)) {
         LogPrintf("CThronePing::Sign() - Error: %s\n", errorMessage.c_str());
         return false;
     }
@@ -749,7 +749,7 @@ bool CThronePayments::ProcessBlock(int nBlockHeight)
     CPubKey pubKeyThrone;
     CKey keyThrone;
 
-    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
     {
         LogPrintf("CThronePayments::ProcessBlock() - Error upon calling SetKey: %s\n", errorMessage.c_str());
         return false;
@@ -789,7 +789,7 @@ bool CThronePaymentWinner::SignatureValid()
                     payee.ToString();
 
         std::string errorMessage = "";
-        if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
+        if(!legacySigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
             return error("CThronePaymentWinner::SignatureValid() - Got bad Throne address signature %s \n", vinThrone.ToString().c_str());
         }
 

@@ -17,55 +17,6 @@
 using namespace json_spirit;
 using namespace std;
 
-Value darksend(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() == 0)
-        throw runtime_error(
-            "darksend <crownaddress> <amount>\n"
-            "crownaddress, reset, or auto (AutoDenominate)"
-            "<amount> is a real and is rounded to the nearest 0.00000001"
-            + HelpRequiringPassphrase());
-
-    if (pwalletMain->IsLocked())
-        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
-
-    if(params[0].get_str() == "auto"){
-        if(fThroNe)
-            return "DarkSend is not supported from thrones";
-
-        darkSendPool.DoAutomaticDenominating();
-        return "DoAutomaticDenominating";
-    }
-
-    if(params[0].get_str() == "reset"){
-        darkSendPool.SetNull(true);
-        darkSendPool.UnlockCoins();
-        return "successfully reset darksend";
-    }
-
-    if (params.size() != 2)
-        throw runtime_error(
-            "darksend <crownaddress> <amount>\n"
-            "crownaddress, denominate, or auto (AutoDenominate)"
-            "<amount> is a real and is rounded to the nearest 0.00000001"
-            + HelpRequiringPassphrase());
-
-    CCrowncoinAddress address(params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Crown address");
-
-    // Amount
-    int64_t nAmount = AmountFromValue(params[1]);
-
-    // Wallet comments
-    CWalletTx wtx;
-    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
-    if (strError != "")
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-
-    return wtx.GetHash().GetHex();
-}
-
 
 Value getpoolinfo(const Array& params, bool fHelp)
 {
@@ -592,7 +543,7 @@ Value throne(const Array& params, bool fHelp)
             CPubKey pubKeyThrone;
             CKey keyThrone;
 
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
+            if(!legacySigner.SetKey(mne.getPrivKey(), errorMessage, keyThrone, pubKeyThrone)){
                 printf(" Error upon calling SetKey for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
@@ -608,13 +559,13 @@ Value throne(const Array& params, bool fHelp)
 
             std::string strMessage = pmn->vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
-            if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone)){
+            if(!legacySigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone)){
                 printf(" Error upon calling SignMessage for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
             }
 
-            if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage)){
+            if(!legacySigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage)){
                 printf(" Error upon calling VerifyMessage for %s\n", mne.getAlias().c_str());
                 failed++;
                 continue;
@@ -655,13 +606,13 @@ Value throne(const Array& params, bool fHelp)
         std::vector<unsigned char> vchThroNeSignature;
         std::string strMessage = activeThrone.vin.ToString() + boost::lexical_cast<std::string>(nVote);
 
-        if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+        if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
             return(" Error upon calling SetKey");
 
-        if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone))
+        if(!legacySigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, keyThrone))
             return(" Error upon calling SignMessage");
 
-        if(!darkSendSigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage))
+        if(!legacySigner.VerifyMessage(pubKeyThrone, vchThroNeSignature, strMessage, errorMessage))
             return(" Error upon calling VerifyMessage");
 
         //send to all peers

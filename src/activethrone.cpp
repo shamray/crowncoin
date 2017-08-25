@@ -103,7 +103,7 @@ void CActiveThrone::ManageStatus()
             CPubKey pubKeyThrone;
             CKey keyThrone;
 
-            if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+            if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
             {
                 notCapableReason = "Error upon calling SetKey: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
@@ -162,7 +162,7 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
     CPubKey pubKeyThrone;
     CKey keyThrone;
 
-    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
+    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, keyThrone, pubKeyThrone))
     {
         errorMessage = strprintf("Error upon calling SetKey: %s\n", errorMessage);
         return false;
@@ -201,7 +201,7 @@ bool CActiveThrone::SendThronePing(std::string& errorMessage) {
     else
     {
         // Seems like we are trying to send a ping while the Throne is not registered in the network
-        errorMessage = "Darksend Throne List doesn't include our Throne, shutting down Throne pinging service! " + vin.ToString();
+        errorMessage = "Throne List doesn't include our Throne, shutting down Throne pinging service! " + vin.ToString();
         status = ACTIVE_THRONE_NOT_CAPABLE;
         notCapableReason = errorMessage;
         return false;

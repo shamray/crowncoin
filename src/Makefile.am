@@ -91,8 +91,7 @@ BITCOIN_CORE_H = \
   compressor.h \
   core_io.h \
   crypter.h \
-  darksend.h \
-  darksend-relay.h \
+  legacysigner.h \
   db.h \
   hash.h \
   init.h \
@@ -214,8 +213,7 @@ libbitcoin_server_a_SOURCES = \
 libbitcoin_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libbitcoin_wallet_a_SOURCES = \
   activethrone.cpp \
-  darksend.cpp \
-  darksend-relay.cpp \
+  legacysigner.cpp \
   db.cpp \
   crypter.cpp \
   instantx.cpp \

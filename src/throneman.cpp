@@ -5,7 +5,7 @@
 #include "throneman.h"
 #include "throne.h"
 #include "activethrone.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "util.h"
 #include "addrman.h"
 #include "spork.h"
@@ -665,10 +665,10 @@ void CThroneMan::ProcessThroneConnections()
 
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes) {
-        if(pnode->fDarkSendMaster){
+        if(pnode->fMasternode){
             if(darkSendPool.pSubmittedToThrone != NULL && pnode->addr == darkSendPool.pSubmittedToThrone->addr) continue;
             LogPrintf("Closing Throne connection %s \n", pnode->addr.ToString());
-            pnode->fDarkSendMaster = false;
+            pnode->fMasternode = false;
             pnode->Release();
         }
     }
@@ -677,7 +677,7 @@ void CThroneMan::ProcessThroneConnections()
 void CThroneMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
 
-    if(fLiteMode) return; //disable all Darksend/Throne related functionality
+    if(fLiteMode) return; //disable all Throne related functionality
     if(!throneSync.IsBlockchainSynced()) return;
 
     LOCK(cs_process_message);
@@ -847,14 +847,14 @@ bool CThroneMan::CheckMnbAndUpdateThroneList(CThroneBroadcast mnb, int& nDos) {
 
     // make sure the vout that was signed is related to the transaction that spawned the Throne
     //  - this is expensive, so it's only done once per Throne
-    if(!darkSendSigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
+    if(!legacySigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
         LogPrintf("CThroneMan::CheckMnbAndUpdateThroneList - Got mismatched pubkey and vin\n");
         nDos = 33;
         return false;
     }
 
     // make sure it's still unspent
-    //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
+    //  - this is checked later by .check() in many places
     if(mnb.CheckInputsAndAdd(nDos)) {
         throneSync.AddedThroneList(mnb.GetHash());
     } else {

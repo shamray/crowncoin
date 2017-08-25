@@ -10,7 +10,7 @@
 #include "instantx.h"
 #include "activethrone.h"
 #include "throneman.h"
-#include "darksend.h"
+#include "legacysigner.h"
 #include "spork.h"
 #include <boost/lexical_cast.hpp>
 
@@ -34,7 +34,7 @@ int nCompleteTXLocks;
 
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if(fLiteMode) return; //disable all darksend/throne related functionality
+    if(fLiteMode) return; //disable all throne related functionality
     if(!IsSporkActive(SPORK_2_INSTANTX)) return;
     if(!throneSync.IsBlockchainSynced()) return;
 
@@ -480,7 +480,7 @@ bool CConsensusVote::SignatureValid()
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchThroNeSignature, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pmn->pubkey2, vchThroNeSignature, strMessage, errorMessage)) {
         LogPrintf("InstantX::CConsensusVote::SignatureValid() - Verify message failed\n");
         return false;
     }
@@ -498,18 +498,18 @@ bool CConsensusVote::Sign()
     //LogPrintf("signing strMessage %s \n", strMessage.c_str());
     //LogPrintf("signing privkey %s \n", strThroNePrivKey.c_str());
 
-    if(!darkSendSigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
+    if(!legacySigner.SetKey(strThroNePrivKey, errorMessage, key2, pubkey2))
     {
         LogPrintf("CConsensusVote::Sign() - ERROR: Invalid throneprivkey: '%s'\n", errorMessage.c_str());
         return false;
     }
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, key2)) {
+    if(!legacySigner.SignMessage(strMessage, errorMessage, vchThroNeSignature, key2)) {
         LogPrintf("CConsensusVote::Sign() - Sign message failed");
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey2, vchThroNeSignature, strMessage, errorMessage)) {
+    if(!legacySigner.VerifyMessage(pubkey2, vchThroNeSignature, strMessage, errorMessage)) {
         LogPrintf("CConsensusVote::Sign() - Verify message failed");
         return false;
     }
