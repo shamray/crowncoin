@@ -574,7 +574,7 @@ bool CThroneBroadcast::CheckInputsAndAdd(int& nDoS)
 
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut(9999.99*COIN, darkSendPool.collateralPubKey);
+    CTxOut vout = CTxOut(9999.99*COIN, legacySigner.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 
