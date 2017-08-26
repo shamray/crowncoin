@@ -49,5 +49,6 @@ public:
     CThrone* pSubmittedToThrone;
 };
 
+void ThreadCheckLegacySigner();
 
 #endif

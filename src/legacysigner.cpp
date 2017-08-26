@@ -22,6 +22,44 @@
 using namespace std;
 using namespace boost;
 
+//TODO: Rename/move to core
+void ThreadCheckLegacySigner()
+{
+    if(fLiteMode) return; //disable all Darksend/Throne related functionality
+
+    // Make this thread recognisable as the wallet flushing thread
+    RenameThread("crown-legacysigner");
+
+    unsigned int c = 0;
+
+    while (true)
+    {
+        MilliSleep(1000);
+        //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
+
+        // try to sync from all available nodes, one step at a time
+        throneSync.Process();
+
+        if(throneSync.IsBlockchainSynced()) {
+
+            c++;
+
+            // check if we should activate or ping every few minutes,
+            // start right after sync is considered to be done
+            if(c % THRONE_PING_SECONDS == 15) activeThrone.ManageStatus();
+
+            if(c % 60 == 0)
+            {
+                mnodeman.CheckAndRemove();
+                mnodeman.ProcessThroneConnections();
+                thronePayments.CleanPaymentList();
+                CleanTransactionLocksList();
+            }
+
+        }
+    }
+}
+
 bool CLegacySigner::SetCollateralAddress(std::string strAddress){
     CBitcoinAddress address;
     if (!address.SetString(strAddress))

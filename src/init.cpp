@@ -1533,6 +1533,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     legacySigner.InitCollateralAddress();
 
+    threadGroup.create_thread(boost::bind(&ThreadCheckLegacySigner));
+
 
     // ********************************************************* Step 11: start node
 
