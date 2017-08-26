@@ -22,6 +22,12 @@
 using namespace std;
 using namespace boost;
 
+
+// A helper object for signing messages from Thrones
+CLegacySigner legacySigner;
+// Keep track of the active Throne
+CActiveThrone activeThrone;
+
 //TODO: Rename/move to core
 void ThreadCheckLegacySigner()
 {
