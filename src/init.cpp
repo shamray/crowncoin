@@ -1531,6 +1531,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
     LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
+    legacySigner.InitCollateralAddress();
+
 
     // ********************************************************* Step 11: start node
 

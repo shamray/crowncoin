@@ -22,6 +22,17 @@
 using namespace std;
 using namespace boost;
 
+bool CLegacySigner::SetCollateralAddress(std::string strAddress){
+    CBitcoinAddress address;
+    if (!address.SetString(strAddress))
+    {
+        LogPrintf("CLegacySigner::SetCollateralAddress - Invalid collateral address\n");
+        return false;
+    }
+    collateralPubKey = GetScriptForDestination(address.Get());
+    return true;
+}
+
 bool CLegacySigner::IsVinAssociatedWithPubkey(CTxIn& vin, CPubKey& pubkey){
     CScript payee2;
     payee2 = GetScriptForDestination(pubkey.GetID());
