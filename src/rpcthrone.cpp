@@ -57,7 +57,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getpoolinfo\n"
-            "Returns an object containing anonymous pool-related information.");
+            "Returns an object containing throne related information.");
 
     Object obj;
     obj.push_back(Pair("current_throne",        mnodeman.GetCurrentThroNe()->addr.ToString()));

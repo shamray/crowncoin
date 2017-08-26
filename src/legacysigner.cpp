@@ -31,7 +31,7 @@ CActiveThrone activeThrone;
 //TODO: Rename/move to core
 void ThreadCheckLegacySigner()
 {
-    if(fLiteMode) return; //disable all Darksend/Throne related functionality
+    if(fLiteMode) return; //disable all Throne related functionality
 
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("crown-legacysigner");
@@ -41,7 +41,7 @@ void ThreadCheckLegacySigner()
     while (true)
     {
         MilliSleep(1000);
-        //LogPrintf("ThreadCheckDarkSendPool::check timeout\n");
+        //LogPrintf("ThreadCheckLegacySigner:check timeout\n");
 
         // try to sync from all available nodes, one step at a time
         throneSync.Process();
