@@ -666,7 +666,7 @@ void CThroneMan::ProcessThroneConnections()
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes) {
         if(pnode->fMasternode){
-            if(darkSendPool.pSubmittedToThrone != NULL && pnode->addr == darkSendPool.pSubmittedToThrone->addr) continue;
+            if(legacySigner.pSubmittedToThrone != NULL && pnode->addr == legacySigner.pSubmittedToThrone->addr) continue;
             LogPrintf("Closing Throne connection %s \n", pnode->addr.ToString());
             pnode->fMasternode = false;
             pnode->Release();
