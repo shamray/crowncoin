@@ -15,7 +15,7 @@
 #include "clientversion.h"
 #include "primitives/transaction.h"
 #include "ui_interface.h"
-#include "legacysignerF.h"
+#include "legacysigner.h"
 #include "wallet.h"
 
 #ifdef WIN32
