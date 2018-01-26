@@ -7,6 +7,12 @@ cache:
   - depends/built
   - depends/sdk-sources
   - $HOME/.ccache
+addons:
+  apt:
+  sources:
+    - ubuntu-toolchain-r-test
+  packages:
+    - g++-6
 env:
   global:
     - MAKEJOBS=-j3
